@@ -5,7 +5,7 @@ header-img: img/home-bg.jpg
 email: LinuxTechInn@gmail.com
 description: "这里是 @LinuxTechInn的博客，一起学习和探索Linux"
 keyword: "LinuxTechInn, Linux, 博客, 个人网站, 互联网, C, 内核"
-url: "https://linuxtechinn.github.io/" # your host, for absolute URL
+url: "https://linuxtechinn.github.io" # your host, for absolute URL
 baseurl: "" # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
@@ -13,11 +13,11 @@ future: true
 
 # SNS settings
 RSS: false
-weibo_username: huxpro
-zhihu_username: huxpro
-github_username: huxpro
-twitter_username: huxpro
-#facebook_username:  huxpro
+weibo_username: LinuxTechInn
+zhihu_username: LinuxTechInn
+github_username: LinuxTechInn
+twitter_username: LinuxTechInn
+#facebook_username:  LinuxTechInn
 #linkedin_username:  firstname-lastname-idxxxx
 
 # Build settings
@@ -74,8 +74,8 @@ ga_domain: huangxuan.me
 
 # Sidebar settings
 sidebar: true # whether or not using Sidebar.
-sidebar-about-description: "要做一个有 swag 的程序员 <br> React Team @ Meta"
-sidebar-avatar: https://github.com/Huxpro.png # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-about-description: "探索Linux"
+sidebar-avatar: https://github.com/LinuxTechInn.png # use absolute URL, seeing it's used in both `/` and `/about/`
 
 # Featured Tags
 featured-tags: true # whether or not using Feature-Tags
