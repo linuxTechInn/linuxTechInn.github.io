@@ -1,2 +1,2 @@
-git add . && git commit -m "post" && git push --force origin pages
+git add . && git commit -m "post" && git push --force origin main
 pause
