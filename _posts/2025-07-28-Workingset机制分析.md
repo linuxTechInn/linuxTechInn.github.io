@@ -1,6 +1,6 @@
 ---
 layout: post
-title: workingset源码分析
+title: workingset机制分析
 date: 2025-07-28 00:46:40 
 last_modified_at: 2025-07-28 00:46:40 
 tags: [Linux, 内存]
@@ -12,7 +12,83 @@ description: 关于workingset源码分析的文章
 
 ## 什么是workingset机制？
 
---待补充
+什么是workingset？workingset其实就是一种内存页冷热识别机制，它定义了许多的概念，基于这些概念实现了一套page的冷热识别的代码，下文将基于workingset.c文件中的注释详解分析workingset的工作原理，这仅仅是代表workingset的假设，可能是更早版本的内核，不一定代表当前内核的工作模式。
+
+以下内容基于workingset.c注释中的内容整理
+
+#### 不翻译的概念
+
+有些概念我不进行重新翻译，而是使用注释使用的单词，这样方便在阅读文章之后，能够更加连贯的阅读代码
+
+promoted  ：将page从inactive list移动到active list
+
+demoted	:  将page从active list移动到inactive list
+
+active list   :  活跃的链表，不能被回收，上面的page需要移动到inactive list才能被回收
+
+inactive list：满足一定条件就可以被回收
+
+#### 隐含的假设
+
+比如memcg只有一个
+
+#### active list 和inactive list的基本工作模式
+
+1、新发生缺页异常的页面会从inactive list的头部加入，而页面回收则从inactive list的尾部开始扫描
+
+2、在inactive list中多次被访问的页面会被promoted到active list ，从而避免被回收
+
+3、当active list过大时，active page则会被demoted到inactive list中
+
+#### 访问频率和缺页距离的由来和定义
+
+##### 抖动的定义
+
+如果一个inactive list的page被频繁使用，但每次在它被promoted之前，它就被回收了，这种现象就是抖动。
+
+##### 讨论以下三种情况
+
+1、如果抖动页的平均的访问距离大于当前内存的大小，这种抖动是因为内存不足导致，这是没有办法处理的。
+
+2、如果面对平均访问距离大于inactive list，但是却小于内存大小的情况。如果不是active page挤占了内存，工作集是完全能够处理这种抖动的。
+
+3、考虑到跟踪每个页面的访问频率的代价过于高昂，通过检测和估计inactive list的抖动情况，将抖动的页面提升到active list当中和活跃的page竞争。
+
+##### 估算inactive page的访问频率
+
+如何估算inactive page的访问频率？
+
+首先，系统中的inactive page的访问行为可以归结为以下两种情况。
+
+1、假如当前的内存大小是固定的情况，如果一个page被第一次访问，也就是第一次处理缺页，它会被加到inactive list当中，当前inactive list上的page都会往后挪一个单位的距离，最后一个page就被回收了。
+
+2、假如当前的内存大小是固定的情况，如果一个page被访问第二次，它会被promoted到active list当中，此时，inactive list的槽位就会少一个，同时，原先在这个page之后的页都会向尾部移动一个槽位的距离。
+
+以及上述情况
+
+1、所有的回收（情况1）和所有的promoted（情况2）的总和就可以用来表示最小的inactive page的访问次数，在代码中使用lruvec->nonresident_age记录这个值，6.12内核代码中使用workingset_age_nonresident(lruvec, folio_nr_pages(folio))函数完成这个过程。
+
+2、将一个inactive page移动n个槽位需要至少n次inactive page的访问。
+
+继续推导，可以得出以下两个的重要结论：
+
+1、当一个page最后被evicted的时候，至少有inactive list大小的inactive page访问次数。
+
+2、可以将page被回收的时和page被重新读入时的inactive page的访问次数的差值定义成refault distance。
+
+基于上述概念，因此定义访问距离为 NR_inactive + (R - E) ,其中，R是page 被回收时的inactive page访问次数，E时重新缺页时的inactive page访问次数。它的含义指的是page从第一次缺页到被回收之后重新缺页，这段时间的inactive page访问次数总共，如果这个值大于所有的内存，则说明这种缺页是无法处理的，如果这个值小于所有的内存，则说明这种缺页是不应该发生的。因此，缺页距离小于所有内存的时候，这个page会被定义成抖动的，也就是NR_inactive + (R - E) <= NR_inactive + NR_active，由于有匿名页和文件页，因此实际的抖动可以被定义成：
+
+文件页 ： NR_inactive_file + (R - E) <= NR_inactive_file + NR_active_file + NR_inactive_anon + NR_active_anon
+
+匿名页： NR_inactive_anon + (R - E) <= NR_inactive_anon + NR_active_anon + NR_inactive_file + NR_active_file
+
+可以被简化为
+
+(R - E) <= NR_active_file + NR_inactive_anon + NR_active_anon
+
+(R - E) <= NR_active_anon + NR_inactive_file + NR_active_file
+
+
 
 ## 主要代码梳理 -- 基于传统的LRU逻辑分析
 
