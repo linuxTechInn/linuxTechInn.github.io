@@ -12,7 +12,9 @@ description: 关于workingset源码分析的文章
 
 ## 什么是workingset机制？
 
-什么是workingset？workingset其实就是一种内存页冷热识别机制，它定义了许多的概念，基于这些概念实现了一套page的冷热识别的代码，下文将基于workingset.c文件中的注释详解分析workingset的工作原理，这仅仅是代表workingset的假设，可能是更早版本的内核，不一定代表当前内核的工作模式。
+什么是workingset？workingset其实就是一种内存页冷热识别机制。它定义了抖动和访问距离的概念，如果访问距离小于所有内存，则认为这样的page是抖动的，这些page就会被promoted。
+
+
 
 以下内容基于workingset.c注释中的内容整理
 
