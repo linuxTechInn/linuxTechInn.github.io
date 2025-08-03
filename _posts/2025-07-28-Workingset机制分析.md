@@ -14,8 +14,6 @@ description: 关于workingset源码分析的文章
 
 什么是workingset？workingset其实就是一种内存页冷热识别机制。它定义了抖动和访问距离的概念，如果访问距离小于所有内存，则认为这样的page是抖动的，这些page就会被promoted。
 
-
-
 以下内容基于workingset.c注释中的内容整理
 
 #### 不翻译的概念
@@ -80,15 +78,13 @@ inactive list：满足一定条件就可以被回收
 
 基于上述概念，因此定义访问距离为 NR_inactive + (R - E) ,其中，R是page 被回收时的inactive page访问次数，E时重新缺页时的inactive page访问次数。它的含义指的是page从第一次缺页到被回收之后重新缺页，这段时间的inactive page访问次数总共，如果这个值大于所有的内存，则说明这种缺页是无法处理的，如果这个值小于所有的内存，则说明这种缺页是不应该发生的。因此，缺页距离小于所有内存的时候，这个page会被定义成抖动的，也就是NR_inactive + (R - E) <= NR_inactive + NR_active，由于有匿名页和文件页，因此实际的抖动可以被定义成：
 
-文件页 ： NR_inactive_file + (R - E) <= NR_inactive_file + NR_active_file + NR_inactive_anon + NR_active_anon
-
-匿名页： NR_inactive_anon + (R - E) <= NR_inactive_anon + NR_active_anon + NR_inactive_file + NR_active_file
-
+```
+文件页:NR_inactive_file + (R - E) <= NR_inactive_file + NR_active_file + NR_inactive_anon + NR_active_anon
+匿名页:NR_inactive_anon + (R - E) <= NR_inactive_anon + NR_active_anon + NR_inactive_file + NR_active_file
 可以被简化为
-
 (R - E) <= NR_active_file + NR_inactive_anon + NR_active_anon
-
 (R - E) <= NR_active_anon + NR_inactive_file + NR_active_file
+```
 
 
 
