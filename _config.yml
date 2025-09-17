@@ -59,7 +59,8 @@ kramdown:
       start_line: 1
 
 # Disqus settings
-disqus_username: disabled
+# Disable disqus as it brings ads
+# disqus_username: disabled
 
 # Netease settings
 netease_comment: false
@@ -69,8 +70,9 @@ netease_comment: false
 # ba_track_id: [your track id]
 
 # Google Analytics
-ga_track_id: "UA-49627206-1" # Format: UA-xxxxxx-xx
-ga_domain: huangxuan.me
+# Disable Google Analytics as it is not necessary
+# ga_track_id: "UA-49627206-1" # Format: UA-xxxxxx-xx
+# ga_domain: huangxuan.me
 
 # Sidebar settings
 sidebar: true # whether or not using Sidebar.
