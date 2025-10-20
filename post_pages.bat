@@ -1,2 +1,2 @@
-git add . && git commit -m "post" && git push -u origin main
+git add . && git commit -m "add article about buddy system" && git push -u origin main
 pause
